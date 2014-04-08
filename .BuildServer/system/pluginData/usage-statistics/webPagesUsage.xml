@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <page path="/admin/admin.html">
+    <usage userId="1" timestamp="1396823666436" />
+  </page>
+  <page path="/admin/createBuildType.html">
+    <usage userId="1" timestamp="1396823676254" />
+  </page>
+  <page path="/admin/createProject.html">
+    <usage userId="1" timestamp="1396823669963" />
+  </page>
+  <page path="/admin/editBuild.html">
+    <usage userId="1" timestamp="1396903770137" />
+  </page>
+  <page path="/admin/editBuildTypeVcsRoots.html">
+    <usage userId="1" timestamp="1396823691086" />
+  </page>
+  <page path="/admin/editProject.html">
+    <usage userId="1" timestamp="1396903768483" />
+  </page>
+  <page path="/admin/editTriggers.html">
+    <usage userId="1" timestamp="1396903777262" />
+  </page>
+  <page path="/admin/editVcsRoot.html">
+    <usage userId="1" timestamp="1396823689208" />
+  </page>
+  <page path="/agents.html">
+    <usage userId="1" timestamp="1396914951729" />
+  </page>
+  <page path="/allProjects.html">
+    <usage userId="1" timestamp="1396823659183" />
+  </page>
+  <page path="/overview.html">
+    <usage userId="1" timestamp="1396829217829" />
+  </page>
+  <page path="/project.html?tab=projectOverview">
+    <usage userId="1" timestamp="1396903591657" />
+  </page>
+  <page path="/queue.html">
+    <usage userId="1" timestamp="1396914947466" />
+  </page>
+  <page path="/viewQueued.html?tab=queuedBuildOverviewTab">
+    <usage userId="1" timestamp="1396903588440" />
+  </page>
+  <page path="/viewType.html">
+    <usage userId="1" timestamp="1396829218943" />
+  </page>
+</root>
+
