@@ -1,0 +1,15 @@
+<component name="libraryTable">
+  <library name="ical4j">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/server/lib/backport-util-concurrent-3.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/lib/commons-codec-1.8.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/lib/commons-lang-2.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/lib/commons-logging-1.1.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/lib/groovy-all-2.1.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/lib/ical4j-1.0.5.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/lib/icu4j-53_1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
