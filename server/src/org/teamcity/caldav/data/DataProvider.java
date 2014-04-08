@@ -17,16 +17,12 @@
 package org.teamcity.caldav.data;
 
 import com.intellij.openapi.diagnostic.Logger;
-import edu.emory.mathcs.backport.java.util.Collections;
 import jetbrains.buildServer.ServiceLocator;
 import jetbrains.buildServer.buildTriggers.BuildTriggerDescriptor;
 import jetbrains.buildServer.buildTriggers.BuildTriggerService;
 import jetbrains.buildServer.buildTriggers.scheduler.CronParseException;
 import jetbrains.buildServer.buildTriggers.scheduler.SchedulerBuildTriggerService;
-import jetbrains.buildServer.serverSide.BuildsManager;
-import jetbrains.buildServer.serverSide.SBuild;
-import jetbrains.buildServer.serverSide.SBuildServer;
-import jetbrains.buildServer.serverSide.SBuildType;
+import jetbrains.buildServer.serverSide.*;
 import jetbrains.buildServer.serverSide.auth.AuthorityHolder;
 import jetbrains.buildServer.serverSide.auth.Permission;
 import jetbrains.buildServer.serverSide.auth.SecurityContext;
@@ -67,13 +63,13 @@ public class DataProvider {
   }
 
   @NotNull
-  public net.fortuna.ical4j.model.Calendar getCalendar() throws CronParseException {
+  public net.fortuna.ical4j.model.Calendar getCalendar(@Nullable SProject project) throws CronParseException {
     net.fortuna.ical4j.model.Calendar cal = new net.fortuna.ical4j.model.Calendar();
-    for (VEvent event : getScheduledEvents()) {
+    for (VEvent event : getScheduledEvents(project)) {
       cal.getComponents().add(event);
     }
-    cal.getProperties().add(new ProdId(Constants.CALENDAR_PRODUCT));
     cal.getProperties().add(Version.VERSION_2_0);
+    cal.getProperties().add(new ProdId(Constants.CALENDAR_PRODUCT));
     cal.getProperties().add(CalScale.GREGORIAN);
     return cal;
   }
@@ -84,18 +80,22 @@ public class DataProvider {
     for (VEvent event : getHistoryEvents()) {
       cal.getComponents().add(event);
     }
-    cal.getProperties().add(new ProdId(Constants.BUILD_HISTORY_CALENDAR_PRODUCT));
     cal.getProperties().add(Version.VERSION_2_0);
+    cal.getProperties().add(new ProdId(Constants.BUILD_HISTORY_CALENDAR_PRODUCT));
     cal.getProperties().add(CalScale.GREGORIAN);
     return cal;
   }
 
   @NotNull
-  private Collection<VEvent> getScheduledEvents() throws CronParseException {
-    List<SBuildType> buildTypes = server.getProjectManager().getActiveBuildTypes();
+  private Collection<VEvent> getScheduledEvents(@Nullable SProject project) throws CronParseException {
+    List<SBuildType> buildTypes = server.getProjectManager()
+            .getActiveBuildTypes();
     List<VEvent> events = new ArrayList<VEvent>(buildTypes.size());
     int i = 0;
     for (SBuildType type : buildTypes) {
+      if (project != null && !type.getProject().equals(project)) {
+        continue;
+      }
       Collection<BuildTriggerDescriptor> triggers = type.getBuildTriggersCollection();
       for (BuildTriggerDescriptor trigger : triggers) {
         BuildTriggerService triggerService = trigger.getBuildTriggerService();
@@ -109,13 +109,12 @@ public class DataProvider {
   }
 
   @NotNull
-  private Collection<VEvent> getHistoryEvents()  {
+  private Collection<VEvent> getHistoryEvents() {
     List<SBuildType> buildTypes = server.getProjectManager().getActiveBuildTypes();
     List<VEvent> events = new ArrayList<VEvent>(buildTypes.size());
     int i = 0;
     for (SBuildType type : buildTypes) {
-      Collection<SBuild> builds = serviceLocator
-              .getSingletonService(BuildsManager.class).findBuildInstances(Collections.singletonList(type.getBuildTypeId()));
+      List<SFinishedBuild> builds = type.getHistory();
       if (builds == null) {
         continue;
       }
@@ -139,7 +138,7 @@ public class DataProvider {
     return event;
   }
 
-  private VEvent createEvent(@NotNull SBuild build, @NotNull SBuildType type, int i)  {
+  private VEvent createEvent(@NotNull SBuild build, @NotNull SBuildType type, int i) {
     VEvent event = new VEvent();
     event.getProperties().add(new Uid("" + i));
     CronExpressionUtil.apply(build.getClientStartDate(), build.getFinishDate(), build.getClientTimeZone(), event);

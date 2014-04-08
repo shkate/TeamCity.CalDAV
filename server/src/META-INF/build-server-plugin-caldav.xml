@@ -22,4 +22,5 @@
 
   <bean id="requestPathTransformInfo" class="org.teamcity.caldav.RequestPathTransformInfo"/>
 
+  <bean id="schedulerTab" class="org.teamcity.caldav.ui.SchedulerTab"/>
 </beans>

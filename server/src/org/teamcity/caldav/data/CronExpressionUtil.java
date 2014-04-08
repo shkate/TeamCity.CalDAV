@@ -31,7 +31,6 @@ import net.fortuna.ical4j.model.property.Duration;
 import net.fortuna.ical4j.model.property.RRule;
 import org.jetbrains.annotations.NotNull;
 import org.osaf.cosmo.calendar.util.Dates;
-import org.osaf.cosmo.calendar.util.TimeZoneUtils;
 
 import javax.annotation.Nullable;
 import java.util.Calendar;
@@ -87,7 +86,10 @@ public class CronExpressionUtil {
 
     event.getProperties().add(rrule);
 
-    Calendar scheduledStart = Calendar.getInstance();
+    java.util.TimeZone timeZone = cronExpression.getTimeZone() != null ? TimeZone.getTimeZone(cronExpression.getTimeZone())
+            : java.util.TimeZone.getDefault();
+
+    Calendar scheduledStart = Calendar.getInstance(timeZone);
     scheduledStart.set(Calendar.MILLISECOND, 0);
     if (isNumber(sec)) {
       scheduledStart.set(Calendar.SECOND, Integer.valueOf(sec));

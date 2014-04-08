@@ -196,7 +196,7 @@ public class CalDAVController extends BaseController implements ServletContextAw
 
       processCorsRequest(request, response);
 
-      net.fortuna.ical4j.model.Calendar calendar = dataProvider.getCalendar();
+      net.fortuna.ical4j.model.Calendar calendar = dataProvider.getCalendar(null);
       response.getWriter().write(CalendarUtils.outputCalendar(calendar));
 
        calendar = dataProvider.getBuildHistoryCalendar();
