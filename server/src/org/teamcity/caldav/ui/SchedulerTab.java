@@ -54,6 +54,12 @@ public class SchedulerTab extends ProjectTab {
       net.fortuna.ical4j.model.Calendar calendar = dataProvider.getCalendar(getProject(request));
       String s = CalendarUtils.outputCalendar(calendar);
       model.put("calendar", s);
+      calendar = dataProvider.getBuildHistoryCalendar(getProject(request));
+      s = CalendarUtils.outputCalendar(calendar);
+      if (s == null) {
+        s = "No history";
+      }
+      model.put("history", s);
     } catch (Exception e) {
       e.printStackTrace();
     }

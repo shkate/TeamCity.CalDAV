@@ -74,10 +74,14 @@ public class DataProvider {
     return cal;
   }
 
-  @NotNull
-  public net.fortuna.ical4j.model.Calendar getBuildHistoryCalendar() {
+  @Nullable
+  public net.fortuna.ical4j.model.Calendar getBuildHistoryCalendar(@Nullable SProject project) {
     net.fortuna.ical4j.model.Calendar cal = new net.fortuna.ical4j.model.Calendar();
-    for (VEvent event : getHistoryEvents()) {
+    Collection<VEvent> historyEvents = getHistoryEvents(project);
+    if (historyEvents.isEmpty()) {
+      return null;
+    }
+    for (VEvent event : historyEvents) {
       cal.getComponents().add(event);
     }
     cal.getProperties().add(Version.VERSION_2_0);
@@ -109,11 +113,14 @@ public class DataProvider {
   }
 
   @NotNull
-  private Collection<VEvent> getHistoryEvents() {
+  private Collection<VEvent> getHistoryEvents(@Nullable SProject project) {
     List<SBuildType> buildTypes = server.getProjectManager().getActiveBuildTypes();
     List<VEvent> events = new ArrayList<VEvent>(buildTypes.size());
     int i = 0;
     for (SBuildType type : buildTypes) {
+      if (project != null && !type.getProject().equals(project)) {
+        continue;
+      }
       List<SFinishedBuild> builds = type.getHistory();
       if (builds == null) {
         continue;

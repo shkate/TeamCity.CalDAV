@@ -199,9 +199,6 @@ public class CalDAVController extends BaseController implements ServletContextAw
       net.fortuna.ical4j.model.Calendar calendar = dataProvider.getCalendar(null);
       response.getWriter().write(CalendarUtils.outputCalendar(calendar));
 
-       calendar = dataProvider.getBuildHistoryCalendar();
-      response.getWriter().write(CalendarUtils.outputCalendar(calendar));
-
     } catch (Throwable throwable) {
       // Sometimes Jersey throws IllegalArgumentException and probably other without utilizing ExceptionMappers
       // forcing plain text error reporting

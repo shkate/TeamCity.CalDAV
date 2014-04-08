@@ -1,4 +1,4 @@
-<%@ include file="/include-internal.jsp"%>
+<%@ include file="/include-internal.jsp" %>
 
 <%--
   ~ Copyright 2000-2014 JetBrains s.r.o.
@@ -15,5 +15,12 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   --%>
-
+Calendar:
+<pre>
 <c:out value="${calendar}"/>
+</pre>
+History:
+<pre>
+<c:out value="${history}"/>
+</pre>
+
