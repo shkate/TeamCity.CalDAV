@@ -27,9 +27,11 @@ import jetbrains.buildServer.serverSide.auth.AuthorityHolder;
 import jetbrains.buildServer.serverSide.auth.Permission;
 import jetbrains.buildServer.serverSide.auth.SecurityContext;
 import net.fortuna.ical4j.model.component.VEvent;
-import net.fortuna.ical4j.model.property.*;
+import net.fortuna.ical4j.model.property.Summary;
+import net.fortuna.ical4j.model.property.Uid;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.osaf.cosmo.calendar.ICalendarUtils;
 import org.teamcity.caldav.errors.AuthorizationFailedException;
 import org.teamcity.caldav.request.Constants;
 
@@ -62,36 +64,37 @@ public class DataProvider {
     return server;
   }
 
-  @NotNull
+  @Nullable
   public net.fortuna.ical4j.model.Calendar getCalendar(@Nullable SProject project) throws CronParseException {
-    net.fortuna.ical4j.model.Calendar cal = new net.fortuna.ical4j.model.Calendar();
-    for (VEvent event : getScheduledEvents(project)) {
+    Collection<VEvent> events = getScheduledEvents(project);
+    if (events.isEmpty()) {
+      return null;
+    }
+
+    net.fortuna.ical4j.model.Calendar cal = ICalendarUtils.createBaseCalendar(project != null ?
+            String.format(Constants.PROJECT_CALENDAR_UID, project.getName()) : Constants.CALENDAR_UID);
+    for (VEvent event : events) {
       cal.getComponents().add(event);
     }
-    cal.getProperties().add(Version.VERSION_2_0);
-    cal.getProperties().add(new ProdId(Constants.CALENDAR_PRODUCT));
-    cal.getProperties().add(CalScale.GREGORIAN);
     return cal;
   }
 
   @Nullable
   public net.fortuna.ical4j.model.Calendar getBuildHistoryCalendar(@Nullable SProject project) {
-    net.fortuna.ical4j.model.Calendar cal = new net.fortuna.ical4j.model.Calendar();
     Collection<VEvent> historyEvents = getHistoryEvents(project);
     if (historyEvents.isEmpty()) {
       return null;
     }
+    net.fortuna.ical4j.model.Calendar cal = ICalendarUtils.createBaseCalendar(project != null ?
+            String.format(Constants.PROJECT_BUILD_HISTORY_CALENDAR_UID, project.getName()) : Constants.PROJECT_BUILD_HISTORY_CALENDAR_UID);
     for (VEvent event : historyEvents) {
       cal.getComponents().add(event);
     }
-    cal.getProperties().add(Version.VERSION_2_0);
-    cal.getProperties().add(new ProdId(Constants.BUILD_HISTORY_CALENDAR_PRODUCT));
-    cal.getProperties().add(CalScale.GREGORIAN);
     return cal;
   }
 
   @NotNull
-  private Collection<VEvent> getScheduledEvents(@Nullable SProject project) throws CronParseException {
+  public Collection<VEvent> getScheduledEvents(@Nullable SProject project) throws CronParseException {
     List<SBuildType> buildTypes = server.getProjectManager()
             .getActiveBuildTypes();
     List<VEvent> events = new ArrayList<VEvent>(buildTypes.size());
@@ -113,7 +116,7 @@ public class DataProvider {
   }
 
   @NotNull
-  private Collection<VEvent> getHistoryEvents(@Nullable SProject project) {
+  public Collection<VEvent> getHistoryEvents(@Nullable SProject project) {
     List<SBuildType> buildTypes = server.getProjectManager().getActiveBuildTypes();
     List<VEvent> events = new ArrayList<VEvent>(buildTypes.size());
     int i = 0;
@@ -155,6 +158,17 @@ public class DataProvider {
     return event;
   }
 
+  @Nullable
+  public SProject findProject(@Nullable String projectName) {
+    if (projectName == null) {
+      return null;
+    }
+    SProject project = server.getProjectManager().findProjectById(projectName);
+    if (project == null) {
+      LOG.warn("Project was not found. Project id: " + projectName + ".");
+    }
+    return project;
+  }
 
   private void applyAdditionalProperties(@NotNull Map<String, String> properties, @NotNull VEvent event) throws CronParseException {
     String onChangesOnly = properties.get("triggerBuildWithPendingChangesOnly");

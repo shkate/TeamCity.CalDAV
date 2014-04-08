@@ -23,6 +23,7 @@ import jetbrains.buildServer.controllers.AuthorizationInterceptor;
 import jetbrains.buildServer.controllers.BaseController;
 import jetbrains.buildServer.plugins.bean.ServerPluginInfo;
 import jetbrains.buildServer.serverSide.SBuildServer;
+import jetbrains.buildServer.serverSide.SProject;
 import jetbrains.buildServer.serverSide.SecurityContextEx;
 import jetbrains.buildServer.serverSide.TeamCityProperties;
 import jetbrains.buildServer.util.StringUtil;
@@ -55,6 +56,9 @@ public class CalDAVController extends BaseController implements ServletContextAw
   final static Logger LOG = Logger.getInstance(CalDAVController.class.getName());
   public static final String CALDAV_CORS_ORIGINS_INTERNAL_PROPERTY_NAME = "caldav.cors.origins";
   public static final String CALDVA_RESPONSE_PRETTYFORMAT = "caldav.response.prettyformat";
+  private static final String PROJECT_PARAM_NAME = "project";
+  private static final String HISTORY_PARAM_NAME = "history";
+  private static final String TYPE_PARAM_NAME = "type";
   private final ConfigurableApplicationContext myConfigurableApplicationContext;
   private final SecurityContextEx mySecurityContext;
   private final DataProvider dataProvider;
@@ -92,7 +96,7 @@ public class CalDAVController extends BaseController implements ServletContextAw
     bindPaths.addAll(addPrefix(originalBindPaths, StringUtil.removeTailingSlash(WebUtil.GUEST_AUTH_PREFIX)));
 
     Map<String, String> transformBindPaths = new HashMap<String, String>();
-    addEntries(transformBindPaths, bindPaths, Constants.API_URL);
+    addEntries(transformBindPaths, bindPaths, Constants.CALDAV_URL);
 
     myRequestPathTransformInfo.setPathMapping(transformBindPaths);
     LOG.debug("Will use request mapping: " + myRequestPathTransformInfo);
@@ -148,14 +152,14 @@ public class CalDAVController extends BaseController implements ServletContextAw
   private List<String> getBindPaths(final ServerPluginInfo pluginDescriptor) {
     String bindPath = pluginDescriptor.getParameterValue(Constants.BIND_PATH_PROPERTY_NAME);
     if (bindPath == null) {
-      return Collections.singletonList(Constants.API_URL);
+      return Collections.singletonList(Constants.CALDAV_URL);
     }
 
     final String[] bindPaths = bindPath.split(",");
 
     if (bindPath.length() == 0) {
       LOG.error("Invalid CalDAV bind path in plugin descriptor: '" + bindPath + "', using defaults");
-      return Collections.singletonList(Constants.API_URL);
+      return Collections.singletonList(Constants.CALDAV_URL);
     }
 
     return Arrays.asList(bindPaths);
@@ -196,8 +200,25 @@ public class CalDAVController extends BaseController implements ServletContextAw
 
       processCorsRequest(request, response);
 
-      net.fortuna.ical4j.model.Calendar calendar = dataProvider.getCalendar(null);
+      String project = request.getParameter(PROJECT_PARAM_NAME);
+      String history = request.getParameter(HISTORY_PARAM_NAME);
+      String type = request.getParameter(TYPE_PARAM_NAME);
+
+      SProject sProject = dataProvider.findProject(project);
+
+      net.fortuna.ical4j.model.Calendar calendar;
+      if (history != null && Boolean.getBoolean(history)) {
+        calendar = dataProvider.getBuildHistoryCalendar(sProject);
+      } else {
+        calendar = dataProvider.getCalendar(sProject);
+      }
       response.getWriter().write(CalendarUtils.outputCalendar(calendar));
+
+      if ("ics".equals(type)) {
+        response.setContentType("text/calendar");
+        WebUtil.setContentDisposition(request, response, "calendar.ics", false);
+        WebUtil.addCacheHeadersForIE(request, response);
+      }
 
     } catch (Throwable throwable) {
       // Sometimes Jersey throws IllegalArgumentException and probably other without utilizing ExceptionMappers
