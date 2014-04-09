@@ -27,7 +27,6 @@ import jetbrains.buildServer.serverSide.auth.AuthorityHolder;
 import jetbrains.buildServer.serverSide.auth.Permission;
 import jetbrains.buildServer.serverSide.auth.SecurityContext;
 import net.fortuna.ical4j.model.component.VEvent;
-import net.fortuna.ical4j.model.property.Summary;
 import net.fortuna.ical4j.model.property.Uid;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -41,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 
 public class DataProvider {
-
 
   private static final Logger LOG = Logger.getInstance(DataProvider.class.getName());
 
@@ -103,11 +101,12 @@ public class DataProvider {
       if (project != null && !type.getProject().equals(project)) {
         continue;
       }
+
       Collection<BuildTriggerDescriptor> triggers = type.getBuildTriggersCollection();
       for (BuildTriggerDescriptor trigger : triggers) {
         BuildTriggerService triggerService = trigger.getBuildTriggerService();
         if (triggerService instanceof SchedulerBuildTriggerService) {
-          VEvent event = createEvent(trigger, type, i++);
+          VEvent event = createScheduledEvent(trigger, type, i++);
           events.add(event);
         }
       }
@@ -129,7 +128,7 @@ public class DataProvider {
         continue;
       }
       for (SBuild build : builds) {
-        VEvent event = createEvent(build, type, i++);
+        VEvent event = createHistoryEvent(build, type, i++);
         events.add(event);
       }
     }
@@ -137,24 +136,23 @@ public class DataProvider {
     return events;
   }
 
-  private VEvent createEvent(@NotNull BuildTriggerDescriptor trigger, @NotNull SBuildType type, int i) throws CronParseException {
+  private VEvent createScheduledEvent(@NotNull BuildTriggerDescriptor trigger, @NotNull SBuildType type, int i) throws CronParseException {
     VEvent event = new VEvent();
     event.getProperties().add(new Uid("" + i));
     Map<String, String> properties = trigger.getProperties();
     CronExpressionUtil.apply(properties, event);
     applyAdditionalProperties(properties, event);
-    Summary summary = new Summary(type.getExtendedName());
-    event.getProperties().add(summary);
+    ICalendarUtils.setSummary(String.format(Constants.VEVENT_SCHEDULED_SUMMARY, type.getExtendedName()), event);
+    ICalendarUtils.setDescription(String.format(Constants.VEVENT_SCHEDULED_DESCRIPTION, type.getCompatibleAgents().size()), event);
     return event;
   }
 
-  private VEvent createEvent(@NotNull SBuild build, @NotNull SBuildType type, int i) {
+  private VEvent createHistoryEvent(@NotNull SBuild build, @NotNull SBuildType type, int i) {
     VEvent event = new VEvent();
     event.getProperties().add(new Uid("" + i));
     CronExpressionUtil.apply(build.getClientStartDate(), build.getFinishDate(), build.getClientTimeZone(), event);
-    String agent = build.getAgent().getName();
-    Summary summary = new Summary(type.getExtendedName() + " : " + agent);
-    event.getProperties().add(summary);
+    ICalendarUtils.setSummary(String.format(Constants.VEVENT_HISTORY_SUMMARY, type.getExtendedName()), event);
+    ICalendarUtils.setDescription(String.format(Constants.VEVENT_HISTORY_DESCRIPTION, build.getAgent().getName()), event);
     return event;
   }
 

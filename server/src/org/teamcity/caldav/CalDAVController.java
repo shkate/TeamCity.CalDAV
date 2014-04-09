@@ -205,18 +205,20 @@ public class CalDAVController extends BaseController implements ServletContextAw
       String type = request.getParameter(TYPE_PARAM_NAME);
 
       SProject sProject = dataProvider.findProject(project);
-
+      String fileName;
       net.fortuna.ical4j.model.Calendar calendar;
-      if (history != null && Boolean.getBoolean(history)) {
+      if (history != null && Boolean.parseBoolean(history)) {
         calendar = dataProvider.getBuildHistoryCalendar(sProject);
+        fileName = "history.ics";
       } else {
         calendar = dataProvider.getCalendar(sProject);
+        fileName = "calendar.ics";
       }
       response.getWriter().write(CalendarUtils.outputCalendar(calendar));
 
       if ("ics".equals(type)) {
         response.setContentType("text/calendar");
-        WebUtil.setContentDisposition(request, response, "calendar.ics", false);
+        WebUtil.setContentDisposition(request, response, fileName, false);
         WebUtil.addCacheHeadersForIE(request, response);
       }
 
