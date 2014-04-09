@@ -2,7 +2,7 @@
 <suite name="CalDAV tests">
   <test name="CalDAV tests">
     <classes>
-      <class name="SimpleTest"/>
+      <class name="org.teamcity.caldav.fake.SimpleTest"/>
     </classes>
   </test>
 </suite>

@@ -24,6 +24,7 @@
     <orderEntry type="library" name="Server-Api" level="project" />
     <orderEntry type="library" name="Idea-OpenApi" level="project" />
     <orderEntry type="library" name="Servlet Api" level="project" />
+    <orderEntry type="library" name="TeamCity-Tests" level="project" />
   </component>
 </module>
 
