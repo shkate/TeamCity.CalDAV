@@ -26,8 +26,8 @@ import jetbrains.buildServer.web.openapi.project.ProjectTab;
 import net.fortuna.ical4j.model.component.VEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.osaf.cosmo.calendar.util.CalendarUtils;
-import org.teamcity.caldav.data.DataProvider;
+import org.teamcity.caldav.data.HistoryCalendarDataProvider;
+import org.teamcity.caldav.data.ScheduledCalendarProvider;
 import org.teamcity.caldav.request.Constants;
 
 import javax.servlet.http.HttpServletRequest;
@@ -38,15 +38,20 @@ public class SchedulerTab extends ProjectTab {
 
 
   @NotNull
-  private final DataProvider dataProvider;
+  private final ScheduledCalendarProvider sbProvider;
+  @NotNull
+  private final HistoryCalendarDataProvider hProvider;
 
   public SchedulerTab(@NotNull PagePlaces pagePlaces,
                       @NotNull ProjectManager projectManager,
                       @NotNull PluginDescriptor descriptor,
-                      @NotNull DataProvider dataProvider) {
+                      @NotNull ScheduledCalendarProvider sbProvider,
+                      @NotNull HistoryCalendarDataProvider hProvider) {
     super("scheduler", "Scheduled Builds", pagePlaces, projectManager, descriptor.getPluginResourcesPath("calendars.jsp"));
     // add your CSS/JS here
-    this.dataProvider = dataProvider;
+    this.sbProvider = sbProvider;
+    this.hProvider = hProvider;
+
   }
 
   @Override
@@ -54,14 +59,14 @@ public class SchedulerTab extends ProjectTab {
                            @NotNull SProject project, @Nullable SUser user) {
 
     try {
-      Collection<VEvent> events = dataProvider.getScheduledEvents(project);
-      if (!events.isEmpty()){
-        model.put("scheduledBuildsCount",events.size());
+      Collection<VEvent> events = sbProvider.getScheduledEvents(project);
+      if (!events.isEmpty()) {
+        model.put("scheduledBuildsCount", events.size());
         model.put("scheduledBuildsDownloadLink", Constants.CALDAV_URL + "?project=" + project.getProjectId() + "&type=ics");
       }
-      events = dataProvider.getHistoryEvents(project);
-      if (!events.isEmpty()){
-        model.put("historyBuildsCount",events.size());
+      events = hProvider.getHistoryEvents(project);
+      if (!events.isEmpty()) {
+        model.put("historyBuildsCount", events.size());
         model.put("historyBuildsDownloadLink", Constants.CALDAV_URL + "?project=" + project.getProjectId() + "&history=true&type=ics");
       }
     } catch (Exception e) {

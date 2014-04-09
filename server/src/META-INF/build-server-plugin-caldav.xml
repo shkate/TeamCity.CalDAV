@@ -18,9 +18,15 @@
 
   <bean id="apiController" class="org.teamcity.caldav.CalDAVController"/>
 
-  <bean id="caldavDataProvider" class="org.teamcity.caldav.data.DataProvider"/>
+<!--  <bean id="caldavDataProvider" class="org.teamcity.caldav.data.DataProvider"/>-->
 
   <bean id="requestPathTransformInfo" class="org.teamcity.caldav.RequestPathTransformInfo"/>
 
   <bean id="schedulerTab" class="org.teamcity.caldav.ui.SchedulerTab"/>
+
+  <bean id="scheduledCalendarProvider" class="org.teamcity.caldav.data.ScheduledCalendarProvider"/>
+  <bean id="historyCalendarProvider" class="org.teamcity.caldav.data.HistoryCalendarDataProvider"/>
+  <bean id="projectProvider" class="org.teamcity.caldav.data.BaseProjectProvider"/>
+  <bean id="activeBuildsProvider" class="org.teamcity.caldav.data.ServerBuildTypesProvider"/>
+  <bean id="historyProvider" class="org.teamcity.caldav.data.BaseHistoryProvider"/>
 </beans>

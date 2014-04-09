@@ -36,7 +36,9 @@ import org.osaf.cosmo.calendar.util.CalendarUtils;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.web.context.ServletContextAware;
 import org.springframework.web.servlet.ModelAndView;
-import org.teamcity.caldav.data.DataProvider;
+import org.teamcity.caldav.data.HistoryCalendarDataProvider;
+import org.teamcity.caldav.data.ProjectProvider;
+import org.teamcity.caldav.data.ScheduledCalendarProvider;
 import org.teamcity.caldav.request.Constants;
 
 import javax.servlet.ServletException;
@@ -61,7 +63,7 @@ public class CalDAVController extends BaseController implements ServletContextAw
   private static final String TYPE_PARAM_NAME = "type";
   private final ConfigurableApplicationContext myConfigurableApplicationContext;
   private final SecurityContextEx mySecurityContext;
-  private final DataProvider dataProvider;
+
   private ServerPluginInfo myPluginDescriptor;
   private final ExtensionHolder myExtensionHolder;
   private AuthorizationInterceptor myAuthorizationInterceptor;
@@ -69,6 +71,11 @@ public class CalDAVController extends BaseController implements ServletContextAw
   private final ClassLoader myClassloader;
   private String myAuthToken;
   private RequestPathTransformInfo myRequestPathTransformInfo;
+
+
+  private final ScheduledCalendarProvider sbProvider;
+  private final HistoryCalendarDataProvider hProvider;
+  private final ProjectProvider projectProvider;
 
   public CalDAVController(final SBuildServer server,
                           WebControllerManager webControllerManager,
@@ -78,9 +85,13 @@ public class CalDAVController extends BaseController implements ServletContextAw
                           final ServerPluginInfo pluginDescriptor,
                           final ExtensionHolder extensionHolder,
                           final AuthorizationInterceptor authorizationInterceptor,
-                          final DataProvider dataProvider) throws ServletException {
+                          @NotNull ScheduledCalendarProvider sbProvider,
+                          @NotNull HistoryCalendarDataProvider hProvider,
+                          @NotNull ProjectProvider projectProvider) throws ServletException {
     super(server);
-    this.dataProvider = dataProvider;
+    this.sbProvider = sbProvider;
+    this.hProvider = hProvider;
+    this.projectProvider = projectProvider;
     myPluginDescriptor = pluginDescriptor;
     myExtensionHolder = extensionHolder;
     myAuthorizationInterceptor = authorizationInterceptor;
@@ -204,14 +215,14 @@ public class CalDAVController extends BaseController implements ServletContextAw
       String history = request.getParameter(HISTORY_PARAM_NAME);
       String type = request.getParameter(TYPE_PARAM_NAME);
 
-      SProject sProject = dataProvider.findProject(project);
+      SProject sProject = projectProvider.findProject(project);
       String fileName;
       net.fortuna.ical4j.model.Calendar calendar;
       if (history != null && Boolean.parseBoolean(history)) {
-        calendar = dataProvider.getBuildHistoryCalendar(sProject);
+        calendar = hProvider.getBuildHistoryCalendar(sProject);
         fileName = "history.ics";
       } else {
-        calendar = dataProvider.getCalendar(sProject);
+        calendar = sbProvider.getCalendar(sProject);
         fileName = "calendar.ics";
       }
       response.getWriter().write(CalendarUtils.outputCalendar(calendar));

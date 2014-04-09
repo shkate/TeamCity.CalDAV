@@ -40,8 +40,8 @@ import java.util.Map;
 
 public class CronExpressionUtil {
 
-  private static final String HOUR = "hour";
-  private static final String MINUTE = "minute";
+  public static final String HOUR = "hour";
+  public static final String MINUTE = "minute";
   private static final String PROP_TIMEZONE = "timezone";
   private static final String DEFAULT_TIMEZONE = "SERVER";
   private static final Dur DURATION = new Dur(0, 0, 5, 0);
@@ -51,11 +51,14 @@ public class CronExpressionUtil {
     UNTIL.add(Calendar.YEAR, 1);
   }
 
+  public static final String WEEKLY = "weekly";
+  public static final String DAILY = "daily";
+
 
   public static void apply(@NotNull Map<String, String> properties,
                            @NotNull VEvent event) throws CronParseException {
 
-    String schedulingPolicy = properties.get("schedulingPolicy");
+    String schedulingPolicy = properties.get(SchedulerBuildTriggerService.PROP_SCHEDULING_POLICY);
 
     CronExpression cronExpression = getCronExpression(properties);
 
@@ -68,11 +71,11 @@ public class CronExpressionUtil {
     String sec = cronExpression.getExpressionSplitted().get(CronFieldInfo.SEC);
 
     String frequency;
-    if ("weekly".equalsIgnoreCase(schedulingPolicy)) {
+    if (WEEKLY.equalsIgnoreCase(schedulingPolicy)) {
       frequency = Recur.WEEKLY;
       hour = properties.get(HOUR);
       min = properties.get("minute");
-    } else if ("daily".equalsIgnoreCase(schedulingPolicy)) {
+    } else if (DAILY.equalsIgnoreCase(schedulingPolicy)) {
       frequency = Recur.DAILY;
       hour = properties.get(HOUR);
       min = properties.get(MINUTE);
@@ -81,7 +84,7 @@ public class CronExpressionUtil {
     }
 
 
-    Recur recur = new Recur(frequency, Dates.getInstance(UNTIL.getTime(), new DateTime()));
+    Recur recur = new Recur(frequency, Dates.getInstance(UNTIL.getTime(), new net.fortuna.ical4j.model.Date()));
     RRule rrule = new RRule(recur);
 
     event.getProperties().add(rrule);
@@ -90,7 +93,11 @@ public class CronExpressionUtil {
             : java.util.TimeZone.getDefault();
 
     Calendar scheduledStart = Calendar.getInstance(timeZone);
+    scheduledStart.set(Calendar.MINUTE, 0);
+    scheduledStart.set(Calendar.HOUR_OF_DAY, 0);
+    scheduledStart.set(Calendar.SECOND, 0);
     scheduledStart.set(Calendar.MILLISECOND, 0);
+
     if (isNumber(sec)) {
       scheduledStart.set(Calendar.SECOND, Integer.valueOf(sec));
     }
@@ -98,7 +105,7 @@ public class CronExpressionUtil {
       scheduledStart.set(Calendar.MINUTE, Integer.valueOf(min));
     }
     if (isNumber(hour)) {
-      scheduledStart.set(Calendar.HOUR, Integer.valueOf(hour));
+      scheduledStart.set(Calendar.HOUR_OF_DAY, Integer.valueOf(hour));
     }
     if (isNumber(dw)) {
       scheduledStart.set(Calendar.DAY_OF_WEEK, Integer.valueOf(dw));
@@ -118,8 +125,8 @@ public class CronExpressionUtil {
   }
 
 
-  private static boolean isNumber(@NotNull String value) {
-    return !value.equals("*") && !value.equals("?") && !value.contains("/");
+  private static boolean isNumber(@Nullable String value) {
+    return value != null && !value.equals("*") && !value.equals("?") && !value.contains("/");
   }
 
   /**
