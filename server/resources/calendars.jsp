@@ -22,7 +22,10 @@
 <div>
   <c:choose>
     <c:when test="${scheduledBuildsCount>0}">
-      ${scheduledBuildsCount} scheduled build(s) found. <a href="${pageContext.request.contextPath}${scheduledBuildsDownloadLink}">download calendar.ics</a>
+      ${scheduledBuildsCount} scheduled build(s) found.
+      download <a href="${pageContext.request.contextPath}${scheduledBuildsDownloadLink}">calendar.ics</a> |
+      &nbsp;
+      <a href="${pageContext.request.contextPath}${scheduledBuildsDownloadLink}">resolved.ics</a>
     </c:when>
     <c:otherwise>
       This project doesn't contains time scheduled builds

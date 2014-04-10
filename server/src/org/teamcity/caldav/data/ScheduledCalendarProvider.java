@@ -18,22 +18,24 @@ package org.teamcity.caldav.data;
 
 
 import jetbrains.buildServer.buildTriggers.BuildTriggerDescriptor;
-import jetbrains.buildServer.buildTriggers.BuildTriggerService;
+import jetbrains.buildServer.buildTriggers.scheduler.CronExpression;
 import jetbrains.buildServer.buildTriggers.scheduler.CronParseException;
 import jetbrains.buildServer.buildTriggers.scheduler.SchedulerBuildTriggerService;
 import jetbrains.buildServer.serverSide.SBuildType;
 import jetbrains.buildServer.serverSide.SProject;
+import net.fortuna.ical4j.model.Date;
+import net.fortuna.ical4j.model.Period;
+import net.fortuna.ical4j.model.PeriodList;
 import net.fortuna.ical4j.model.component.VEvent;
+import net.fortuna.ical4j.model.property.DtStart;
 import net.fortuna.ical4j.model.property.Uid;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.osaf.cosmo.calendar.ICalendarUtils;
+import org.osaf.cosmo.calendar.util.Dates;
 import org.teamcity.caldav.request.Constants;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ScheduledCalendarProvider {
 
@@ -54,6 +56,33 @@ public class ScheduledCalendarProvider {
             String.format(Constants.PROJECT_CALENDAR_UID, project.getName()) : Constants.CALENDAR_UID);
     for (VEvent event : events) {
       cal.getComponents().add(event);
+    }
+    return cal;
+  }
+
+
+  @Nullable
+  public net.fortuna.ical4j.model.Calendar getCalendarResolved(@Nullable SProject project) throws CronParseException {
+    Collection<VEvent> events = getScheduledEvents(project);
+    if (events.isEmpty()) {
+      return null;
+    }
+
+    net.fortuna.ical4j.model.Calendar cal = ICalendarUtils.createBaseCalendar(project != null ?
+            String.format(Constants.PROJECT_CALENDAR_UID, project.getName()) : Constants.CALENDAR_UID);
+    for (VEvent event : events) {
+      PeriodList consumedTime = event.getConsumedTime(Dates.getInstance(new java.util.Date(), new Date()),
+              Dates.getInstance(CronExpressionUtil.UNTIL.getTime(), new Date()));
+      int i = 0;
+      for (Iterator iterator = consumedTime.iterator(); iterator.hasNext(); ) {
+        VEvent rEvent = new VEvent();
+        rEvent.getProperties().add(new Uid("x" + (i++)));
+        ICalendarUtils.setSummary(ICalendarUtils.getXProperty("summary", event), rEvent);
+        ICalendarUtils.setDuration(rEvent, CronExpressionUtil.DURATION);
+        Object next = iterator.next();
+        rEvent.getProperties().add(new DtStart(((Period) next).getStart()));
+        cal.getComponents().add(rEvent);
+      }
     }
     return cal;
   }

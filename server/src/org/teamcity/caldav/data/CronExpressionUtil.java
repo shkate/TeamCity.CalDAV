@@ -44,8 +44,8 @@ public class CronExpressionUtil {
   public static final String MINUTE = "minute";
   private static final String PROP_TIMEZONE = "timezone";
   private static final String DEFAULT_TIMEZONE = "SERVER";
-  private static final Dur DURATION = new Dur(0, 0, 5, 0);
-  private static final Calendar UNTIL = Calendar.getInstance();
+  public static final Dur DURATION = new Dur(0, 0, 5, 0);
+  public static final Calendar UNTIL = Calendar.getInstance();
 
   static {
     UNTIL.add(Calendar.YEAR, 1);
@@ -172,4 +172,6 @@ public class CronExpressionUtil {
     event.getProperties().add(new DtStart(new DateTime(startDate)));
     event.getProperties().add(new DtEnd(new DateTime(finishDate)));
   }
+
+
 }

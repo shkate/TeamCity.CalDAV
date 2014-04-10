@@ -63,6 +63,7 @@ public class SchedulerTab extends ProjectTab {
       if (!events.isEmpty()) {
         model.put("scheduledBuildsCount", events.size());
         model.put("scheduledBuildsDownloadLink", Constants.CALDAV_URL + "?project=" + project.getProjectId() + "&type=ics");
+        model.put("scheduledBuildsResolvedDownloadLink", Constants.CALDAV_URL + "?project=" + project.getProjectId() + "&type=resolved");
       }
       events = hProvider.getHistoryEvents(project);
       if (!events.isEmpty()) {

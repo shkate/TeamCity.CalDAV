@@ -221,13 +221,16 @@ public class CalDAVController extends BaseController implements ServletContextAw
       if (history != null && Boolean.parseBoolean(history)) {
         calendar = hProvider.getBuildHistoryCalendar(sProject);
         fileName = "history.ics";
+      } else if (type.equals("resolved")) {
+        calendar = sbProvider.getCalendarResolved(sProject);
+        fileName = "calendar_resolved.ics";
       } else {
         calendar = sbProvider.getCalendar(sProject);
         fileName = "calendar.ics";
       }
       response.getWriter().write(CalendarUtils.outputCalendar(calendar));
 
-      if ("ics".equals(type)) {
+      if ("ics".equals(type) || "resolved".equals(type)) {
         response.setContentType("text/calendar");
         WebUtil.setContentDisposition(request, response, fileName, false);
         WebUtil.addCacheHeadersForIE(request, response);
